@@ -9,11 +9,13 @@ pub struct Emulator {
     ram: [u16; 4096],
     display: [usize; SCREEN_WIDTH * SCREEN_HEIGHT],
     pc: u16,
+    sp: u16,
     i_reg: u16,
     v_reg: [u8; 16],
     stack: [u16; 16],
     delay_timer: u8,
     sound_timer: u8,
+    opcode: u16
 }
 
 impl Emulator {
@@ -22,11 +24,13 @@ impl Emulator {
             ram: [0; 4096], 
             display: [0; SCREEN_WIDTH * SCREEN_HEIGHT], 
             pc: START_ADDRESS, 
+            sp: 0,
             i_reg: 0, 
             v_reg: [0; 16], 
             stack: [0; 16], 
             delay_timer: 0, 
-            sound_timer: 0 };
+            sound_timer: 0,
+            opcode: 0 };
             
             for (i, &data) in FONT_SET.iter().enumerate() {
                 emulator.ram[FONT_SET_START_ADDRESS as usize + i] = data as u16;
@@ -50,4 +54,26 @@ impl Emulator {
 
         };
     }
+
+
+    // opcodes
+
+    // clear the display - CLS
+    fn op_00e0(&mut self) {
+        self.display = [0; self.display.len()];
+    }
+
+    // return from subroutine - RET
+    fn op_00ee(&mut self) {
+        self.sp = self.sp - 1;
+        self.pc = self.stack[self.sp as usize];
+    }
+
+    // jump to location nnn - JP addr
+    fn op_1nnn(&mut self) {
+        // zero out the first 4 bits (to remove the JP bit)
+        let address = self.opcode & 0x0FFF;
+        self.pc = address;
+    }
+
 }
