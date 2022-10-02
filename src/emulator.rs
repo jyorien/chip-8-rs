@@ -1,5 +1,7 @@
+use crate::font_set::*;
 use std::fs::File;
 use std::io::prelude::*;
+
 const SCREEN_WIDTH: usize = 64;
 const SCREEN_HEIGHT: usize = 32;
 const START_ADDRESS: u16 = 0x200;
@@ -16,7 +18,7 @@ pub struct Emulator {
 
 impl Emulator {
     pub fn new() -> Emulator {
-        Emulator { 
+        let mut emulator = Emulator { 
             ram: [0; 4096], 
             display: [0; SCREEN_WIDTH * SCREEN_HEIGHT], 
             pc: START_ADDRESS, 
@@ -24,7 +26,13 @@ impl Emulator {
             v_reg: [0; 16], 
             stack: [0; 16], 
             delay_timer: 0, 
-            sound_timer: 0 }
+            sound_timer: 0 };
+            
+            for (i, &data) in FONT_SET.iter().enumerate() {
+                emulator.ram[FONT_SET_START_ADDRESS as usize + i] = data as u16;
+            }
+
+            emulator
     }
     pub fn load_rom(&mut self, filename: &str)  {
         let mut file = File::open(filename).unwrap();
