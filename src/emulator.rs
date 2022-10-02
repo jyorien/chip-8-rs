@@ -2,9 +2,9 @@ use std::fs::File;
 use std::io::prelude::*;
 const SCREEN_WIDTH: usize = 64;
 const SCREEN_HEIGHT: usize = 32;
-
+const START_ADDRESS: u16 = 0x200;
 pub struct Emulator {
-    ram: [usize; 4096],
+    ram: [u16; 4096],
     display: [usize; SCREEN_WIDTH * SCREEN_HEIGHT],
     pc: u16,
     i_reg: u16,
@@ -15,11 +15,31 @@ pub struct Emulator {
 }
 
 impl Emulator {
-    pub fn loadROM(filename: &str) -> std::io::Result<(Vec<u8>)> {
-        let mut file = File::open(filename)?;
+    pub fn new() -> Emulator {
+        Emulator { 
+            ram: [0; 4096], 
+            display: [0; SCREEN_WIDTH * SCREEN_HEIGHT], 
+            pc: START_ADDRESS, 
+            i_reg: 0, 
+            v_reg: [0; 16], 
+            stack: [0; 16], 
+            delay_timer: 0, 
+            sound_timer: 0 }
+    }
+    pub fn load_rom(&mut self, filename: &str)  {
+        let mut file = File::open(filename).unwrap();
         let mut file_content: Vec<u8> = Vec::new();
-        file.read_to_end(&mut file_content);
+        
+        match file.read_to_end(&mut file_content) {
+            Ok(_) => {
+                // load ROM content into memory
+                for (i, &data) in file_content.iter().enumerate() {
+                    self.ram[START_ADDRESS as usize + i] = data as u16;
+                }
+                print!("{:?}", self.ram);
+            },
+            Err(err) => panic!("Problem opening the file, {:?}", err)
 
-        Ok((file_content))
+        };
     }
 }
