@@ -101,7 +101,7 @@ impl Emulator {
     // Skip next instruction if Vx != kk - SNE Bx, byte
     fn op_4xkk(&mut self) {
         let Vx = (self.opcode & 0x0F00) >> 8;
-        let byte = self.opcode & 0xFF00;
+        let byte = self.opcode & 0x00FF;
         if u16::from(self.v_reg[Vx as usize]) != byte {
             self.pc = self.pc + 2
         }
@@ -121,6 +121,11 @@ impl Emulator {
         let Vx = (self.opcode & 0x0F00) >> 8;
         let byte = self.opcode & 0x00FF;
         self.v_reg[Vx as usize] = byte as u8;
+    }
+
+    // Adds the value kk to the value of register Vx, then stores the result in Vx - ADD Vx, byte
+    fn op_7xkk(&mut self) {
+        let Vx = ()
     }
 
 
