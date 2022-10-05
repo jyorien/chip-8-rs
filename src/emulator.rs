@@ -9,7 +9,7 @@ pub struct Emulator {
     ram: [u16; 4096],
     display: [usize; SCREEN_WIDTH * SCREEN_HEIGHT],
     pc: u16,
-    sp: u16,
+    sp: u8,
     i_reg: u16,
     v_reg: [u8; 16],
     stack: [u16; 16],
@@ -71,9 +71,57 @@ impl Emulator {
 
     // jump to location nnn - JP addr
     fn op_1nnn(&mut self) {
-        // zero out the first 4 bits (to remove the JP bit)
+        // zero out the first nibble (to remove the JP bit)
+        // 0x0FFF = 0000 1111 1111 1111
         let address = self.opcode & 0x0FFF;
         self.pc = address;
     }
+
+    // call subroutine at nnn - CALL addr
+    fn op_2nnn(&mut self) {
+        let address = self.opcode & 0x0FFF;
+        // store pc on top of stack
+        self.stack[self.sp as usize] = self.pc;
+        self.sp = self.sp + 1;
+        // set pc to opcode
+        self.pc = address;
+    }
+
+    // Skip next instruction if Vx (8 bit register) == kk - SE Vx, byte
+    fn op_3xkk(&mut self) {
+        // get Vx (second nibble)
+        // 0x0F00 = 0000 1111 0000 0000
+        let Vx = (self.opcode & 0x0F00) >> 8;
+         let byte = self.opcode & 0x00FF;
+        if u16::from(self.v_reg[Vx as usize]) == byte {
+            self.pc = self.pc + 2
+        }
+    }
+
+    // Skip next instruction if Vx != kk - SNE Bx, byte
+    fn op_4xkk(&mut self) {
+        let Vx = (self.opcode & 0x0F00) >> 8;
+        let byte = self.opcode & 0xFF00;
+        if u16::from(self.v_reg[Vx as usize]) != byte {
+            self.pc = self.pc + 2
+        }
+    }
+
+    // Skip next instruction if Vx == Vy - SE Vx, Vy
+    fn op_5xy0(&mut self) {
+        let Vx = (self.opcode & 0x0F00) >> 8;
+        let Vy = (self.opcode & 0x00F0) >> 4;
+        if self.v_reg[Vx as usize] == self.v_reg[Vy as usize] {
+            self.pc = self.pc + 2;
+        }
+    }
+
+    // The interpreter puts value kk into register Vx - LD Vx, byte
+    fn op_6xkk(&mut self) {
+        let Vx = (self.opcode & 0x0F00) >> 8;
+        let byte = self.opcode & 0x00FF;
+        self.v_reg[Vx as usize] = byte as u8;
+    }
+
 
 }
