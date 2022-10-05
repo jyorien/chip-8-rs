@@ -125,8 +125,53 @@ impl Emulator {
 
     // Adds the value kk to the value of register Vx, then stores the result in Vx - ADD Vx, byte
     fn op_7xkk(&mut self) {
-        let Vx = ()
+        let Vx = (self.opcode & 0x0F00) >> 8;
+        let byte = self.opcode & 0x00FF;
+        self.v_reg[Vx as usize] = self.v_reg[Vx as usize] + byte as u8;
     }
 
+    // Set Vx = Vy - LD Vx, Vy
+    fn op_8xy0(&mut self) {
+        let Vx = (self.opcode & 0x0F00) >> 8;
+        let Vy = (self.opcode & 0x00F0) >> 4;
+        self.v_reg[Vx as usize] = self.v_reg[Vy as usize];
+    }
+
+    // Set Vx = Vx OR Vy - OR Vx, Vy
+    fn op_8xy1(&mut self) {
+        let Vx = (self.opcode & 0x0F00) >> 8;
+        let Vy = (self.opcode & 0x00F0) >> 4;
+        self.v_reg[Vx as usize] = self.v_reg[Vx as usize] | self.v_reg[Vy as usize];
+    }
+
+    // Set Vx = Vx AND Vy - AND Vx, Vy
+    fn op_8xy2(&mut self) {
+        let Vx = (self.opcode & 0x0F00) >> 8;
+        let Vy = (self.opcode & 0x00F0) >> 4;
+        self.v_reg[Vx as usize] = self.v_reg[Vx as usize] & self.v_reg[Vy as usize];
+    }
+
+    // Set Vx = Vx XOR Vy - XOR Vy, Vy
+    fn op_8xy3(&mut self) {
+        let Vx = (self.opcode & 0x0F00) >> 8;
+        let Vy = (self.opcode & 0x00F0) >> 4;
+        self.v_reg[Vx as usize] = self.v_reg[Vx as usize] ^ self.v_reg[Vy as usize];
+    }
+
+    // Set Vx = Vy, set VF = carry and only store lower 8 bits in Vx, ADD Vx, Vy
+    fn op_8xy4(&mut self) {
+        let Vx = (self.opcode & 0x0F00) >> 8;
+        let Vy = (self.opcode & 0x00F0) >> 4;
+        let sum = self.v_reg[Vx as usize] + self.v_reg[Vy as usize];
+        let result = sum & 0x0FF;
+        let carry = sum & 0xFF00 >> 8;
+
+        self.v_reg[Vx as usize] = result;
+        if sum > 0xFF {
+            self.v_reg[0xF] = 1;
+        } else {
+            self.v_reg[0xF] = 0;
+        }
+    }
 
 }
