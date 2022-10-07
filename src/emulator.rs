@@ -158,7 +158,7 @@ impl Emulator {
         self.v_reg[Vx as usize] = self.v_reg[Vx as usize] ^ self.v_reg[Vy as usize];
     }
 
-    // Set Vx = Vy, set VF = carry and only store lower 8 bits in Vx, ADD Vx, Vy
+    // Set Vx = Vy, set VF = carry and only store lower 8 bits in Vx - ADD Vx, Vy
     fn op_8xy4(&mut self) {
         let Vx = (self.opcode & 0x0F00) >> 8;
         let Vy = (self.opcode & 0x00F0) >> 4;
@@ -172,6 +172,19 @@ impl Emulator {
         } else {
             self.v_reg[0xF] = 0;
         }
+    }
+
+    // IF Vx > Vy, VF = 1. Set Vx = Vx - Vy - SUB Vx, Vy
+    fn op_8xy5(&mut self) {
+        let Vx = (self.opcode & 0x0F00) >> 8;
+        let Vy = (self.opcode & 0x00F0) >> 4;
+        let VF = if self.v_reg[Vx as usize] > self.v_reg[Vx as usize] {
+            1
+        } else {
+            0
+        };
+        self.v_reg[0xF] = VF;
+        self.v_reg[Vx as usize] = self.v_reg[Vx as usize] - self.v_reg[Vy as usize];
     }
 
 }
